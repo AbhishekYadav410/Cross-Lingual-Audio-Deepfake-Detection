@@ -1,0 +1,16 @@
+model,split,auroc,auroc_ci,eer,eer_ci,balanced_acc,macro_f1
+Model A (RBF-SVM),In-Language Test (Seen),0.9269,"[0.900, 0.952]",0.1622,"[0.126, 0.219]",0.8372,0.8368
+Model B1 (Baseline 2D-CNN),In-Language Test (Seen),0.5063,"[0.441, 0.569]",0.4857,"[0.427, 0.545]",0.5,0.3271
+Model B2 (LCNN-MFM),In-Language Test (Seen),0.9509,"[0.924, 0.971]",0.1284,"[0.091, 0.176]",0.8673,0.8639
+Model B3 (SE-ResNet-18),In-Language Test (Seen),0.9655,"[0.942, 0.983]",0.1071,"[0.068, 0.140]",0.8724,0.8732
+Hybrid Forensic Ensemble,In-Language Test (Seen),0.9847,"[0.973, 0.993]",0.0714,"[0.043, 0.102]",0.9343,0.934
+Model A (RBF-SVM),Held-Out Dravidian,0.9092,"[0.889, 0.927]",0.172,"[0.144, 0.197]",0.8195,0.8157
+Model B1 (Baseline 2D-CNN),Held-Out Dravidian,0.4789,"[0.444, 0.518]",0.5211,"[0.485, 0.557]",0.5,0.3294
+Model B2 (LCNN-MFM),Held-Out Dravidian,0.9082,"[0.888, 0.927]",0.1807,"[0.152, 0.205]",0.7677,0.7603
+Model B3 (SE-ResNet-18),Held-Out Dravidian,0.9684,"[0.958, 0.978]",0.0967,"[0.075, 0.116]",0.8862,0.8866
+Hybrid Forensic Ensemble,Held-Out Dravidian,0.9752,"[0.966, 0.983]",0.0811,"[0.061, 0.099]",0.8935,0.8923
+Model A (RBF-SVM),Held-Out Tibeto-Burman,0.854,"[0.820, 0.887]",0.2128,"[0.174, 0.251]",0.7584,0.7535
+Model B1 (Baseline 2D-CNN),Held-Out Tibeto-Burman,0.5082,"[0.455, 0.561]",0.475,"[0.426, 0.516]",0.5,0.3357
+Model B2 (LCNN-MFM),Held-Out Tibeto-Burman,0.8659,"[0.834, 0.898]",0.2213,"[0.178, 0.256]",0.7457,0.7398
+Model B3 (SE-ResNet-18),Held-Out Tibeto-Burman,0.9314,"[0.908, 0.953]",0.1417,"[0.115, 0.180]",0.8465,0.8463
+Hybrid Forensic Ensemble,Held-Out Tibeto-Burman,0.9464,"[0.927, 0.965]",0.1319,"[0.095, 0.159]",0.8666,0.8665

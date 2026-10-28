@@ -1,0 +1,25 @@
+experiment:
+  name: "exp1_in_language_baseline"
+  description: "Evaluate Model A and Model B on Seen Indian languages (Train 70%, Val 15%, Test 15%)"
+
+model_a:
+  types:
+    - "svm_rbf"
+    - "logistic_regression"
+  features:
+    - "lfcc_summary"
+  c_param: 1.0
+
+model_b:
+  architecture: "LightweightAudioCNN"
+  features:
+    - "log_mel"
+    - "lfcc"
+  base_channels: 16
+  fc_hidden: 64
+  dropout: 0.3
+  batch_size: 32
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  epochs: 25
+  patience: 7

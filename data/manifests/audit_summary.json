@@ -1,0 +1,32 @@
+{
+  "total_samples": 3200,
+  "languages": {
+    "Manipuri": 275,
+    "Bodo": 200,
+    "Assamese": 200,
+    "Bengali": 200,
+    "Dogri": 200,
+    "Kannada": 200,
+    "Malayalam": 200,
+    "Marathi": 200,
+    "Sanskrit": 200,
+    "Nepali": 200,
+    "English": 200,
+    "Telugu": 200,
+    "Hindi": 200,
+    "Odia": 200,
+    "Tamil": 200,
+    "Gujarati": 125
+  },
+  "class_balance": {
+    "0": 1603,
+    "1": 1597
+  },
+  "split_counts": {
+    "train": 1348,
+    "val": 289,
+    "test_in_lang": 288,
+    "test_held_out_dravidian": 800,
+    "test_held_out_tibeto_burman": 475
+  }
+}

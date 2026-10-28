@@ -1,0 +1,25 @@
+experiment:
+  name: "exp3_codec_robustness"
+  description: "Evaluate detection under MP3 and Opus compression with and without codec data augmentation"
+
+codecs:
+  clean:
+    bitrate: "none"
+  mp3_64k:
+    format: "mp3"
+    bitrate: "64k"
+  mp3_32k:
+    format: "mp3"
+    bitrate: "32k"
+  opus_24k:
+    format: "opus"
+    bitrate: "24k"
+  opus_16k:
+    format: "opus"
+    bitrate: "16k"
+
+augmentation:
+  enabled_models:
+    - "lightweight_cnn_log_mel"
+    - "lightweight_cnn_lfcc"
+  probability: 0.5

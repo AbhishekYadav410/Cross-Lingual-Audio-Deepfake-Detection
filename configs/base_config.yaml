@@ -1,0 +1,48 @@
+project:
+  name: "audio-deepfake-research"
+  title: "Cross-Lingual Generalization and Codec Robustness of Lightweight AI-Generated Speech Detectors for Indian Languages"
+  seed: 42
+
+audio:
+  sample_rate: 16000
+  duration_sec: 3.0
+  target_samples: 48000
+  normalize: true
+
+features:
+  n_fft: 1024
+  hop_length: 512
+  n_mels: 80
+  n_lfcc: 80
+  f_min: 0.0
+  f_max: 8000.0
+
+linguistics:
+  held_out_family: "Dravidian"
+  held_out_languages:
+    - "tamil"
+    - "telugu"
+    - "kannada"
+    - "malayalam"
+  seen_languages:
+    - "hindi"
+    - "marathi"
+    - "bengali"
+    - "gujarati"
+    - "odia"
+    - "assamese"
+    - "dogri"
+    - "nepali"
+    - "sanskrit"
+    - "bodo"
+    - "manipuri"
+    - "english"
+
+codecs:
+  test_profiles:
+    - "clean"
+    - "mp3_64k"
+    - "mp3_32k"
+    - "opus_24k"
+    - "opus_16k"
+  augmentation_probability: 0.5

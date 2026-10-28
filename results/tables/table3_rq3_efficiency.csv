@@ -1,0 +1,6 @@
+model,parameters,checkpoint_size_mb,mean_latency_ms,throughput_samples_sec,device
+Model A (RBF-SVM),0,1.58,0.15,6500.0,CPU
+Model B1 (Baseline 2D-CNN),105841,1.24,4.559,219.4,CPU
+Model B2 (LCNN-MFM),173825,2.03,6.673,149.8,CPU
+Model B3 (SE-ResNet-18),365609,4.26,9.906,100.9,CPU
+Hybrid Forensic Ensemble,539434,6.29,16.729,59.8,CPU

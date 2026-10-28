@@ -1,0 +1,6 @@
+codec_condition,clean_cnn_auroc,clean_cnn_eer,lcnn_mfm_auroc,lcnn_mfm_eer,se_resnet_auroc,se_resnet_eer,delta_se_gain
+clean,0.4639,0.55,0.9117,0.17,0.9732,0.09,0.5093
+mp3_64k,0.4625,0.57,0.9085,0.18,0.9688,0.1,0.5063
+mp3_32k,0.4602,0.57,0.8875,0.22,0.9598,0.12,0.4995
+opus_24k,0.4556,0.56,0.8796,0.22,0.9436,0.14,0.488
+opus_16k,0.4505,0.57,0.8634,0.24,0.9073,0.2,0.4568

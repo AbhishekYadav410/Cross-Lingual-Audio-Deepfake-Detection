@@ -1,0 +1,39 @@
+# Environments
+.venv/
+venv/
+env/
+ENV/
+
+# Python cache & build
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+build/
+dist/
+*.egg-info/
+
+# Pytest / Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Audio Files & Raw Data
+# (Audio files are regenerated via scripts/download_real_indic_corpus.py; manifests and CSV splits are committed)
+*.wav
+*.mp3
+*.opus
+*.flac
+*.ogg
+*.parquet
+data/raw/
+data/processed/
+data/benchmarks/*/audio/
+
+# Editor & OS files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.log
