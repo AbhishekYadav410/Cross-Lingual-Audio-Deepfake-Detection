@@ -135,8 +135,8 @@ Evaluated with **500-resample Bootstrap 95% Confidence Intervals**:
 ### 1. Environment Setup
 ```powershell
 # Clone the repository
-git clone https://github.com/AbhishekYadav410/indic-deepfake-speech-detection.git
-cd indic-deepfake-speech-detection
+git clone https://github.com/AbhishekYadav410/Cross-Lingual-Audio-Deepfake-Detection.git
+cd Cross-Lingual-Audio-Deepfake-Detection
 
 # Create and activate virtual environment
 python -m venv .venv
