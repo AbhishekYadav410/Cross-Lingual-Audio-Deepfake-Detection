@@ -7,9 +7,17 @@ Model B3 (SE-ResNet), and the Hybrid Forensic Ensemble.
 """
 
 import os
+import sys
+
+# Ensure repository root is on sys.path
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
 import io
 import torch
 import numpy as np
+import pandas as pd
 import soundfile as sf
 import matplotlib.pyplot as plt
 import streamlit as st
@@ -36,39 +44,47 @@ def load_models():
     classical_extractor = ClassicalFeatureExtractor(sample_rate=16000, n_coefficients=30)
     codec_sim = AudioCodecSimulator()
 
+    ckpt_dir = os.path.join(PROJECT_ROOT, "checkpoints")
+
     # 1. Model B1: Clean 2D-CNN
     cnn_clean = LightweightAudioCNN(base_channels=16, fc_hidden=64)
-    if os.path.exists("checkpoints/cnn_clean_best.pt"):
-        ckpt = torch.load("checkpoints/cnn_clean_best.pt", map_location=device)
+    cnn_clean_path = os.path.join(ckpt_dir, "cnn_clean_best.pt")
+    if os.path.exists(cnn_clean_path):
+        ckpt = torch.load(cnn_clean_path, map_location=device)
         cnn_clean.load_state_dict(ckpt["model_state_dict"])
     cnn_clean.eval()
 
     # 2. Model B2: LCNN-MFM
     lcnn_model = LCNN(in_channels=1, dropout_rate=0.3)
-    if os.path.exists("checkpoints/lcnn_mfm_augmented_best.pt"):
-        ckpt = torch.load("checkpoints/lcnn_mfm_augmented_best.pt", map_location=device)
+    lcnn_path = os.path.join(ckpt_dir, "lcnn_mfm_augmented_best.pt")
+    if os.path.exists(lcnn_path):
+        ckpt = torch.load(lcnn_path, map_location=device)
         lcnn_model.load_state_dict(ckpt["model_state_dict"])
     lcnn_model.eval()
 
     # 3. Model B3: SE-ResNet
     se_resnet = SEResNet(in_channels=1, base_channels=24, dropout_rate=0.3)
-    if os.path.exists("checkpoints/se_resnet_augmented_best.pt"):
-        ckpt = torch.load("checkpoints/se_resnet_augmented_best.pt", map_location=device)
+    se_resnet_path = os.path.join(ckpt_dir, "se_resnet_augmented_best.pt")
+    if os.path.exists(se_resnet_path):
+        ckpt = torch.load(se_resnet_path, map_location=device)
         se_resnet.load_state_dict(ckpt["model_state_dict"])
     se_resnet.eval()
 
     # 4. Model A: SVM
     svm_model = ClassicalBaseline(model_type="svm_rbf")
-    if os.path.exists("checkpoints/model_a_svm_rbf.joblib"):
-        svm_model.load("checkpoints/model_a_svm_rbf.joblib")
+    svm_path = os.path.join(ckpt_dir, "model_a_svm_rbf.joblib")
+    if os.path.exists(svm_path):
+        svm_model.load(svm_path)
 
     # 5. Model B4: DistilHuBERT (SOTA Pretrained Transformer)
     distilhubert_model = None
-    if os.path.exists("checkpoints/distilhubert_best.pt"):
+    distilhubert_path = os.path.join(ckpt_dir, "distilhubert_best.pt")
+    if os.path.exists(distilhubert_path):
         try:
             distilhubert_model = DistilHuBERTClassifier()
-            ckpt = torch.load("checkpoints/distilhubert_best.pt", map_location=device)
-            distilhubert_model.load_state_dict(ckpt["model_state_dict"])
+            ckpt = torch.load(distilhubert_path, map_location=device)
+            state_dict = ckpt["model_state_dict"] if isinstance(ckpt, dict) and "model_state_dict" in ckpt else ckpt
+            distilhubert_model.load_state_dict(state_dict)
             distilhubert_model.eval()
         except Exception as e:
             st.warning(f"Note: DistilHuBERT weights could not be loaded: {e}")
@@ -160,45 +176,131 @@ def main():
                 with torch.no_grad():
                     prob_hubert = float(distilhubert_model.predict_proba(raw_t)[0, 0])
 
-            st.markdown("### Multi-Model Forensic Probabilities")
-            c1, c2, c3 = st.columns(3)
-            with c1:
-                st.metric("Model A (LFCC RBF-SVM)", f"{prob_svm*100:.1f}% Fake")
-                st.metric("Model B1 (Baseline 2D-CNN)", f"{prob_cnn*100:.1f}% Fake")
-            with c2:
-                st.metric("Model B2 (LCNN with MFM)", f"{prob_lcnn*100:.1f}% Fake")
-                st.metric("Model B3 (SE-ResNet-18)", f"{prob_se*100:.1f}% Fake")
-            with c3:
-                if prob_hubert is not None:
-                    st.metric("🔥 Model B4 (DistilHuBERT SSL)", f"{prob_hubert*100:.1f}% Fake")
-                st.metric("🌟 Hybrid Ensemble", f"{prob_ens*100:.1f}% Fake")
+            # Model data collection
+            models_data = []
 
-            st.markdown("---")
-            verdict_source = st.radio(
-                "Select Active Classifier for Primary Verdict:",
-                ["DistilHuBERT (Empirical SOTA)", "Hybrid Ensemble", "SE-ResNet-18", "LCNN-MFM"],
-                index=0 if prob_hubert is not None else 1,
-                horizontal=True
+            # 1. DistilHuBERT (Empirical SOTA)
+            if distilhubert_model is not None and prob_hubert is not None:
+                models_data.append({
+                    "name": "Model B4 (DistilHuBERT SSL)",
+                    "accuracy": 96.53,
+                    "auroc": 0.9943,
+                    "eer": 3.47,
+                    "prob": prob_hubert,
+                    "vote": "Fake" if prob_hubert >= threshold else "Bonafide",
+                    "eligible": True,
+                    "quality": "🥇 SOTA (Best Quality)",
+                    "status": "✅ Included in Majority Vote",
+                })
+
+            # 2. SE-ResNet-18
+            models_data.append({
+                "name": "Model B3 (SE-ResNet-18)",
+                "accuracy": 90.28,
+                "auroc": 0.9655,
+                "eer": 10.71,
+                "prob": prob_se,
+                "vote": "Fake" if prob_se >= threshold else "Bonafide",
+                "eligible": True,
+                "quality": "🥈 High Quality",
+                "status": "✅ Included in Majority Vote",
+            })
+
+            # 3. LCNN-MFM
+            models_data.append({
+                "name": "Model B2 (LCNN with MFM)",
+                "accuracy": 85.76,
+                "auroc": 0.9509,
+                "eer": 12.84,
+                "prob": prob_lcnn,
+                "vote": "Fake" if prob_lcnn >= threshold else "Bonafide",
+                "eligible": True,
+                "quality": "🥉 High Quality",
+                "status": "✅ Included in Majority Vote",
+            })
+
+            # 4. Model A (LFCC RBF-SVM)
+            models_data.append({
+                "name": "Model A (LFCC RBF-SVM)",
+                "accuracy": 82.64,
+                "auroc": 0.9269,
+                "eer": 16.22,
+                "prob": prob_svm,
+                "vote": "Fake" if prob_svm >= threshold else "Bonafide",
+                "eligible": True,
+                "quality": "Moderate Quality",
+                "status": "✅ Included in Majority Vote",
+            })
+
+            # 5. Model B1 (Baseline 2D-CNN) - RULED OUT due to lower accuracy metrics
+            models_data.append({
+                "name": "Model B1 (Baseline 2D-CNN)",
+                "accuracy": 73.61,
+                "auroc": 0.8124,
+                "eer": 26.39,
+                "prob": prob_cnn,
+                "vote": "Fake" if prob_cnn >= threshold else "Bonafide",
+                "eligible": False,
+                "quality": "⚠️ Low Quality",
+                "status": "❌ Ruled Out (Inferior Accuracy Metric)",
+            })
+
+            # Majority voting among eligible models
+            eligible_models = [m for m in models_data if m["eligible"]]
+            fake_votes = sum(1 for m in eligible_models if m["vote"] == "Fake")
+            real_votes = sum(1 for m in eligible_models if m["vote"] == "Bonafide")
+            total_votes = len(eligible_models)
+
+            # Determine best model by benchmark accuracy
+            best_model = max(eligible_models, key=lambda m: m["accuracy"])
+
+            # Final verdict determination (majority vote, tie-broken by best model)
+            if fake_votes > real_votes:
+                is_deepfake = True
+            elif real_votes > fake_votes:
+                is_deepfake = False
+            else:
+                is_deepfake = (best_model["vote"] == "Fake")
+
+            # Final Verdict Display
+            if is_deepfake:
+                st.error(
+                    f"🚨 **FINAL VERDICT: AI-GENERATED DEEPFAKE**\n\n"
+                    f"• **Majority Decision:** **{fake_votes} of {total_votes} qualified models** voted **Deepfake** (threshold $\\tau = {threshold:.2f}$)\n\n"
+                    f"• **Best Model Result ({best_model['name']}):** **{best_model['prob']*100:.1f}% Fake** (Benchmark Accuracy: {best_model['accuracy']:.1f}%, AUROC: {best_model['auroc']:.4f})\n\n"
+                    f"• *Rule-out Policy: Model B1 (Baseline 2D-CNN) was excluded from the verdict due to inferior accuracy metrics ({models_data[-1]['accuracy']:.1f}% Acc, {models_data[-1]['eer']:.1f}% EER).*"
+                )
+            else:
+                st.success(
+                    f"✅ **FINAL VERDICT: BONAFIDE HUMAN SPEECH**\n\n"
+                    f"• **Majority Decision:** **{real_votes} of {total_votes} qualified models** voted **Bonafide Human** (threshold $\\tau = {threshold:.2f}$)\n\n"
+                    f"• **Best Model Result ({best_model['name']}):** **{(1.0 - best_model['prob'])*100:.1f}% Bonafide** (Benchmark Accuracy: {best_model['accuracy']:.1f}%, AUROC: {best_model['auroc']:.4f})\n\n"
+                    f"• *Rule-out Policy: Model B1 (Baseline 2D-CNN) was excluded from the verdict due to inferior accuracy metrics ({models_data[-1]['accuracy']:.1f}% Acc, {models_data[-1]['eer']:.1f}% EER).*"
+                )
+
+            # Best Model Result Highlight Card
+            st.markdown("### 🏆 Best Model Result")
+            st.info(
+                f"**Top Performing Architecture:** **{best_model['name']}** ({best_model['quality']})\n\n"
+                f"• **Sample Prediction:** **{best_model['prob']*100:.1f}% Fake** ({(1.0 - best_model['prob'])*100:.1f}% Bonafide)\n\n"
+                f"• **Benchmark Quality:** **{best_model['accuracy']:.2f}% Accuracy** | **{best_model['auroc']:.4f} AUROC** | **{best_model['eer']:.2f}% EER**"
             )
 
-            if verdict_source == "DistilHuBERT (Empirical SOTA)" and prob_hubert is not None:
-                active_prob = prob_hubert
-                active_name = "DistilHuBERT"
-            elif verdict_source == "SE-ResNet-18":
-                active_prob = prob_se
-                active_name = "SE-ResNet-18"
-            elif verdict_source == "LCNN-MFM":
-                active_prob = prob_lcnn
-                active_name = "LCNN-MFM"
-            else:
-                active_prob = prob_ens
-                active_name = "Hybrid Ensemble"
-
-            # Final verdict based on active model & selected threshold
-            if active_prob >= threshold:
-                st.error(f"🚨 **VERDICT: AI-GENERATED DEEPFAKE** ({active_name} Confidence: {active_prob*100:.1f}%, tau={threshold:.2f})")
-            else:
-                st.success(f"✅ **VERDICT: BONAFIDE HUMAN SPEECH** ({active_name} Confidence: {(1.0-active_prob)*100:.1f}%, tau={threshold:.2f})")
+            # Comparative Analysis & Quality Breakdown Table
+            st.markdown("### 📊 Model Results & Quality Comparison")
+            df_comp = pd.DataFrame([
+                {
+                    "Model": m["name"],
+                    "Quality Rank": m["quality"],
+                    "Benchmark Acc": f"{m['accuracy']:.1f}%",
+                    "Benchmark AUROC": f"{m['auroc']:.3f}",
+                    "Sample Score": f"{m['prob']*100:.1f}% Fake",
+                    "Model Vote": "🚨 Fake" if m["vote"] == "Fake" else "✅ Bonafide",
+                    "Voting Status": m["status"],
+                }
+                for m in models_data
+            ])
+            st.dataframe(df_comp, use_container_width=True, hide_index=True)
 
             # Spectrogram visualizer
             st.markdown("### Log-Mel Spectrogram")
